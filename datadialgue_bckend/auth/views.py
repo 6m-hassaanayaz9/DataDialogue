@@ -28,7 +28,9 @@ class SignInView(View):
 #---------------------------------------------------------
         # If user exists and password is correct, generate tokens
         tokens = self.get_tokens(user.id, user.email)  # You need to implement this method
-        self.update_refresh_token(user.id, tokens['refresh_token'])  # You need to implement this method
+        self.update_access_token(user.id, tokens['access_token'])
+        self.update_refresh_token(user.id, tokens['refresh_token']) 
+        
 #---------------------------------------------------------
         # Return response
         return JsonResponse({
@@ -61,8 +63,8 @@ class SignInView(View):
 
         # Create payload for the token
         token_payload = {
-            'user_id': admin_id,
-            'email': admin_email,
+            'user_id': user_id,
+            'email': email,
             'token_type': token_type,
             'exp': expiry_time
         }
@@ -73,10 +75,29 @@ class SignInView(View):
 
         return token
 
+    def update_access_token(self, admin_id, acess_token):
+            # Implement logic to update refresh token in database
+            # DB mein refresh and access token store karna hai and in seperate table?
+            try:
+            # Retrieve the user record from the database
+                user = User.objects.get(id=user_id)
+                user.access_token = access_token
+                user.save()
+            except User.DoesNotExist:
+                # Handle case where user does not exist
+                return JsonResponse({"status": 400, "message": "User not found"}, status=400)    
+                pass
+    
+
     def update_refresh_token(self, admin_id, refresh_token):
             # Implement logic to update refresh token in database
             # DB mein refresh and access token store karna hai and in seperate table?
-            # 
-            pass
-    
-
+            try:
+            # Retrieve the user record from the database
+                user = User.objects.get(id=user_id)
+                user.refresh_token = refresh_token
+                user.save()
+            except User.DoesNotExist:
+                # Handle case where user does not exist
+                return JsonResponse({"status": 400, "message": "User not found"}, status=400)    
+                pass
