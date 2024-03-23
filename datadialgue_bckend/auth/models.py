@@ -1,12 +1,21 @@
 from django.db import models
 
+# class User(models.Model):
+#     user_id = models.AutoField(primary_key=True)
+#     email = models.EmailField(unique=True)
+#     password = models.CharField(max_length=255)
+#     username = models.CharField(max_length=255)
+#     access_token= models.CharField(max_length=255, blank=True, null=True)
+#     refresh_token = models.CharField(max_length=255, blank=True, null=True)
+    
 class User(models.Model):
     user_id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     username = models.CharField(max_length=255)
-    access_token= models.CharField(max_length=255, blank=True, null=True)
-    refresh_token = models.CharField(max_length=255, blank=True, null=True)
+    access_token = models.CharField(max_length=255, default=None, blank=True, null=True)
+    refresh_token = models.CharField(max_length=255, default=None, blank=True, null=True)
+
 
 class Database(models.Model):
     database_id = models.AutoField(primary_key=True)
@@ -14,11 +23,11 @@ class Database(models.Model):
     access_key = models.CharField(max_length=255, blank=True, null=True)
     connection_string = models.CharField(max_length=255)
 
-class AccessList(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    database = models.ForeignKey(Database, on_delete=models.CASCADE)
-    class Meta:
-        unique_together = (('user', 'database'),)
+# class AccessList(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     database = models.ForeignKey(Database, on_delete=models.CASCADE)
+#     class Meta:
+#         unique_together = (('user', 'database'),)
 
 class Conversation(models.Model):
     conversation_id = models.AutoField(primary_key=True)
