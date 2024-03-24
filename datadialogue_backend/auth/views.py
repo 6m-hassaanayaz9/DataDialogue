@@ -81,7 +81,7 @@ class LoginView(View):
 
         except ObjectDoesNotExist:
 
-            print("Useiiiiiiiiiir not found")
+            print("User not found")
 
             return JsonResponse({"status": 400, "message": "User not found"}, status=400)
 
