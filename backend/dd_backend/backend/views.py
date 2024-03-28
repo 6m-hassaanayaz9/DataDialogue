@@ -317,4 +317,25 @@ class SignupView(View):
 
                 print("Error in signup:", e)
 
-                return JsonResponse({"status": 400, "message": "Error in signup"}, status=400)     
+                return JsonResponse({"status": 400, "message": "Error in signup"}, status=400)    
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutView(View):
+    def post(self, request):
+        data = request.POST
+        email = data.get('email')
+        try:
+             
+            user = User.objects.get(email=email)
+            user.access_token = ""
+            user.refresh_token = ""
+            user.save()
+            print("User logged out")
+            return JsonResponse({"status": 200, "message": "User logged out successfully"}, status=200)
+
+        except User.DoesNotExist:
+            print("User not found")
+            return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+        
+        
