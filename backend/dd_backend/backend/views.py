@@ -23,6 +23,7 @@ from django.contrib.auth.hashers import check_password, make_password
 
 from .models import User
 
+import json
 
 import jwt
 
@@ -102,6 +103,7 @@ class LoginView(View):
         print("Refresh token updated")
 
         print("User found")
+        print("User id that has been sent is:", user.user_id)
         
         # Return response
         return JsonResponse({
@@ -116,14 +118,11 @@ class LoginView(View):
             "data": {
 
 
-                "name": user.username,  # Assuming there's a 'name' field in your Admin model
-
-
+                "username": user.username, # Assuming there's a 'name' field in your Admin model
+                "user_id": user.user_id,
                 "tokens": tokens
-
-
+                
             }
-
 
         })
 
@@ -341,8 +340,6 @@ class LogoutView(View):
 
         except User.DoesNotExist:
             print("User not found")
-            return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+    return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
-        
-
         
