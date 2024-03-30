@@ -323,11 +323,16 @@ class SignupView(View):
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(View):
     def post(self, request):
-        data = request.POST
-        email = data.get('email')
+ 
         try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            print("Now the user id coming from frontend is:", user_id)
+        
+            if user_id is None:
+                raise ValueError("User ID not found in request data")
              
-            user = User.objects.get(email=email)
+            user = User.objects.get(user_id=user_id)
             user.access_token = ""
             user.refresh_token = ""
             user.save()
@@ -338,4 +343,6 @@ class LogoutView(View):
             print("User not found")
             return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
+        
+
         
