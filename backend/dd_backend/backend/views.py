@@ -22,7 +22,9 @@ from django.contrib.auth.hashers import check_password, make_password
 
 
 from .models import User
-from .models import Database
+from .models import Database,Conversation,Message
+import requests
+import time
 
 import json
 
@@ -39,6 +41,72 @@ def get_database_names(request):
     database_names = [db.database_name for db in databases]
     print(database_names)
     return JsonResponse({'database_names': database_names})
+
+
+
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoadPreviousView(View):
+    def post(self, request):
+        data = request.POST
+        
+        conversation_name = data.get('conversation')
+        print("Received ", conversation_name)
+        conversation = Conversation.objects.get(conversation_id=conversation_name)
+
+        messages = Message.objects.filter(conversation=conversation)
+
+        message_data = []
+        for message in messages:
+            message_data.append({
+                'question': message.question,
+                'answer': message.answer,
+               
+            })
+        print(message_data)
+        # # Return the chat history as JSON response
+        return JsonResponse({'messages': message_data}) 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ConversationsView(View):
+    def post(self, request):
+        data = request.POST
+        username = data.get('username')
+        database_name = data.get('database')
+        print("Received ", username, database_name)
+        conversations = Conversation.objects.filter(user__username=username, database__database_name=database_name)
+        conversation_names = [conversation.conversation_id for conversation in conversations]
+        print(conversation_names)
+        return JsonResponse({'conversations': conversation_names})
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class QueryView(View):
+
+    def post(self, request):
+        data = request.POST
+        query = data.get('query')
+        print("Query received:", query)
+        time.sleep(2)
+        # answer = self.answer("How many males?")
+        # print ("Answer:", answer)
+        return JsonResponse({'status': 200, 'message': 'There are 15097 males in the database'})
+    # def answer(self,query):
+    #     url = 'https://e106-203-82-58-11.ngrok-free.app/'
+    #     params = {'auth': '123', 'question': query}
+    #     response = requests.get(url, params=params)
+    #     if response.status_code == 200:
+    #         return response.json
+    #     else:
+    #         print("Error:", response.status_code)
+
+
+
+
+
 
 
 @method_decorator(csrf_exempt, name='dispatch')
