@@ -22,6 +22,7 @@ from django.contrib.auth.hashers import check_password, make_password
 
 
 from .models import User
+from .models import Database
 
 import json
 
@@ -30,6 +31,14 @@ import jwt
 
 from datetime import datetime, timedelta
 
+
+
+
+def get_database_names(request):
+    databases = Database.objects.all()
+    database_names = [db.database_name for db in databases]
+    print(database_names)
+    return JsonResponse({'database_names': database_names})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -340,6 +349,6 @@ class LogoutView(View):
 
         except User.DoesNotExist:
             print("User not found")
-    return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+        return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
         
