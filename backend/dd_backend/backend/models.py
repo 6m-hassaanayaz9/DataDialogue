@@ -5,8 +5,8 @@ class User(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     username = models.CharField(max_length=255)
-    access_token = models.CharField(max_length=255, default=None, blank=True, null=True)
-    refresh_token = models.CharField(max_length=255, default=None, blank=True, null=True)
+    access_token = models.JSONField(default=None, blank=True, null=True)
+    refresh_token = models.JSONField(default=None, blank=True, null=True)
 
 
 class Database(models.Model):

@@ -56,6 +56,7 @@ class LoginView(View):
         email = data.get('email')
         
         
+        
 
         print("Email extracted:", email)  # Check the extracted email
 
@@ -108,19 +109,15 @@ class LoginView(View):
         # Return response
         return JsonResponse({
 
-
             "status": 200,
-
-
             "message": "User logged in",
-
-
             "data": {
-
 
                 "username": user.username, # Assuming there's a 'name' field in your Admin model
                 "user_id": user.user_id,
-                "tokens": tokens
+                "access_tokens": tokens["access_token"],
+                "refresh_tokens": tokens["refresh_token"],
+                
                 
             }
 
@@ -143,95 +140,54 @@ class LoginView(View):
 
         return {'refresh_token': refresh_token, 'access_token': access_token}
     
-
-
+    def get_access_token(self, user_id, email):
+            
+            access_token = self.generate_token(user_id, email, token_type='access')
+    
+            return access_token
+    def get_refresh_token(self, user_id, email):
+                
+                refresh_token = self.generate_token(user_id, email, token_type='refresh')
+        
+                return refresh_token
+            
     def generate_token(self, user_id, email, token_type):
 
 
         # Define expiration time based on token type
-
-
         if token_type == 'refresh':
-
-
             expiry_time = datetime.utcnow() + timedelta(days=1)  # Refresh token expires in 1 day
-
-
         elif token_type == 'access':
-
-
             expiry_time = datetime.utcnow() + timedelta(minutes=15)  # Access token expires in 15 minutes
-
-
         else:
-
-
             raise ValueError("Invalid token type")
-
-
-
         # Create payload for the token
-
 
         token_payload = {
 
-
             'user_id': user_id,
-
             'email': email,
-
             'token_type': token_type,
-
             'exp': expiry_time
 
-
         }
-
-
-
         # Encode token using JWT with a secret key
-
-
         secret_key = 'Ah@m649'
-
-
         token = jwt.encode(token_payload, secret_key, algorithm='HS256')
-
-
         return token
-
-
-
+    
     def update_access_token(self, user_id, access_token):
-
-
-        # Implement logic to update refresh token in database
-
-
-        # DB mein refresh and access token store karna hai and in seperate table?
-
 
         try:
 
 
-            # Retrieve the user record from the database
-
-
             user = User.objects.get(user_id=user_id)
-
-
-            user.access_token = access_token
-
-
+            user.access_token = {"token": access_token, "expiry": (datetime.utcnow() + timedelta(minutes=15)).isoformat()}
             user.save()
 
 
         except User.DoesNotExist:
-
-
                 # Handle case where user does not exist
-
-
             return JsonResponse({"status": 400, "message": "User not found"}, status=400)    
         pass
     
@@ -241,32 +197,18 @@ class LoginView(View):
     def update_refresh_token(self, user_id, refresh_token):
 
 
-            # Implement logic to update refresh token in database
-
-
-            # DB mein refresh and access token store karna hai and in seperate table?
-
-
             try:
-
-
-            # Retrieve the user record from the database
-
 
                 user = User.objects.get(user_id=user_id)
 
 
-                user.refresh_token = refresh_token
+                user.refresh_token = {"token": refresh_token, "expiry": (datetime.utcnow() + timedelta(days=1)).isoformat()}
 
 
                 user.save()
 
 
             except User.DoesNotExist:
-
-
-                # Handle case where user does not exist
-
 
                 return JsonResponse({"status": 400, "message": "User not found"}, status=400)    
                 pass
@@ -340,6 +282,47 @@ class LogoutView(View):
 
         except User.DoesNotExist:
             print("User not found")
-    return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+            return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+        
+@method_decorator(csrf_exempt, name='dispatch')  
+class validateToken(View):
+    def post(self, request):
+        data = json.loads(request.body)
+        print("Data received in Validate Token:>>>", data)
+        user_id= data.get('user_id')
+        access_token = data.get('access_token')
+        print("Access token received:", access_token)
+        refresh_token = data.get('refresh_token')
+        print("Refresh token received:", refresh_token)
+        user = User.objects.get(user_id=user_id)
+        
+        if user.access_token["token"]== access_token and user.refresh_token.token["token"] == refresh_token:            
+            print("Token is valid")
+            if user.access_token["expiry"] < datetime.utcnow().isoformat():
+                
+                
+                print("Access token is expired")
+                new_access_token = get_access_token(user_id, user.email)
+                #------------------------------------------------ye check karo ki new access token generate ho raha hai ya nahi
+                print("New access token generated:", new_access_token)
+                update_access_token(user_id, new_access_token)
+                print("Access token updated")
+                return JsonResponse({"status": 201, "message": "New access token created", "new_access_token": new_access_token}, status=201)
+            
+            
+            elif user.refresh_token["expiry"] < datetime.utcnow().isoformat():
+                print("Refresh token is expired")
+                
+                return JsonResponse({"status": 400, "message": "Refresh Token is invalid"}, status=200)
+            
+            
+            else:
+                print("Tokens are valid")
+                return JsonResponse({"status": 200, "message": "Token is valid"}, status=200)
+                
+        
+        else:
+            print(" Tokens are invalid")
+            return JsonResponse({"status": 400, "message": "Session expired Login again"}, status=400)
         
         
