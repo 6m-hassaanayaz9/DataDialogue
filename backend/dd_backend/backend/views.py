@@ -44,6 +44,38 @@ def get_database_names(request):
 
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class SaveMessage(View):
+    def post(self, request):
+        data = request.POST
+        query = data.get('query')
+        answer = data.get('response')
+        conversation_id = data.get('conversationId')
+        print("Received ", query, answer, conversation_id)
+        conversation = Conversation.objects.get(conversation_id=conversation_id)
+        message = Message(question=query, answer = answer, conversation= conversation)
+        message.save()
+        return JsonResponse({'status': 200, 'message': 'Message saved successfully'})
+
+
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CreateConversation(View):
+    def post(self, request):
+        data = request.POST
+        username = data.get('username')
+        database_name = data.get('database')
+        conversation_name = data.get('name')
+        print("Received ", username, database_name, conversation_name)
+        user = User.objects.get(username=username)
+        database = Database.objects.get(database_name=database_name)
+        conversation = Conversation(name=conversation_name, user=user, database=database)
+        conversation.save()
+        conversation_id = conversation.conversation_id
+        print("sending back conversation id", conversation_id)
+        return JsonResponse({'id': conversation_id,'name': conversation_name})
 
 
 
@@ -51,11 +83,11 @@ def get_database_names(request):
 class LoadPreviousView(View):
     def post(self, request):
         data = request.POST
-        
-        conversation_name = data.get('conversation')
-        print("Received ", conversation_name)
-        conversation = Conversation.objects.get(conversation_id=conversation_name)
-
+        conversation_id = int(data.get('id'))
+        conversation_name = data.get('name')
+        print(conversation_id, conversation_name)
+        conversation = Conversation.objects.get(conversation_id=conversation_id,name=conversation_name)
+        print(conversation)
         messages = Message.objects.filter(conversation=conversation)
 
         message_data = []
@@ -77,9 +109,9 @@ class ConversationsView(View):
         database_name = data.get('database')
         print("Received ", username, database_name)
         conversations = Conversation.objects.filter(user__username=username, database__database_name=database_name)
-        conversation_names = [conversation.conversation_id for conversation in conversations]
-        print(conversation_names)
-        return JsonResponse({'conversations': conversation_names})
+        conversation_dict = {conversation.conversation_id: conversation.name for conversation in conversations}
+        print(conversation_dict)
+        return JsonResponse({'conversations': conversation_dict})
 
 
 
@@ -89,8 +121,8 @@ class QueryView(View):
     def post(self, request):
         data = request.POST
         query = data.get('query')
-        print("Query received:", query)
         time.sleep(2)
+        print("Query received:", query)
         # answer = self.answer("How many males?")
         # print ("Answer:", answer)
         return JsonResponse({'status': 200, 'message': 'There are 15097 males in the database'})
