@@ -39,9 +39,7 @@ class LoginView(View):
 
     def post(self, request):
 
-
         # Assuming data is coming in JSON format and contains email and password
-        
 
         data = request.POST  # If your data is coming in form data
 
@@ -54,10 +52,6 @@ class LoginView(View):
         print("Data received:", data)  # Check if data is received correctly
 
         email = data.get('email')
-        
-        
-        
-
         print("Email extracted:", email)  # Check the extracted email
 
         print("Password extracted:", password)  # Check the extracted password
@@ -105,6 +99,9 @@ class LoginView(View):
 
         print("User found")
         print("User id that has been sent is:", user.user_id)
+        print("User name that has been sent is:", user.username)
+        print("Access token that has been sent is:", tokens["access_token"])
+        print("Refresh token that has been sent is:", tokens["refresh_token"])
         
         # Return response
         return JsonResponse({
@@ -115,8 +112,8 @@ class LoginView(View):
 
                 "username": user.username, # Assuming there's a 'name' field in your Admin model
                 "user_id": user.user_id,
-                "access_tokens": tokens["access_token"],
-                "refresh_tokens": tokens["refresh_token"],
+                "access_token": tokens["access_token"],
+                "refresh_token": tokens["refresh_token"],
                 
                 
             }
@@ -286,6 +283,7 @@ class LogoutView(View):
         
 @method_decorator(csrf_exempt, name='dispatch')  
 class validateToken(View):
+    login_view = LoginView()
     def post(self, request):
         data = json.loads(request.body)
         print("Data received in Validate Token:>>>", data)
@@ -295,17 +293,21 @@ class validateToken(View):
         refresh_token = data.get('refresh_token')
         print("Refresh token received:", refresh_token)
         user = User.objects.get(user_id=user_id)
-        
-        if user.access_token["token"]== access_token and user.refresh_token.token["token"] == refresh_token:            
+        print("User details------------->:", user)
+        print("User access token------------->:", user.access_token["token"])
+        print("User access token------------->:", user.access_token["expiry"])
+        print("User refresh token------------->:", user.refresh_token["token"])
+        print("User refresh token------------->:", user.refresh_token["expiry"])
+        if user.access_token["token"]== access_token and user.refresh_token["token"]== refresh_token:            
             print("Token is valid")
             if user.access_token["expiry"] < datetime.utcnow().isoformat():
                 
                 
                 print("Access token is expired")
-                new_access_token = get_access_token(user_id, user.email)
+                new_access_token = self.login_view.get_access_token(user_id, user.email)
                 #------------------------------------------------ye check karo ki new access token generate ho raha hai ya nahi
                 print("New access token generated:", new_access_token)
-                update_access_token(user_id, new_access_token)
+                self.login_view.update_access_token(user_id, new_access_token)
                 print("Access token updated")
                 return JsonResponse({"status": 201, "message": "New access token created", "new_access_token": new_access_token}, status=201)
             
