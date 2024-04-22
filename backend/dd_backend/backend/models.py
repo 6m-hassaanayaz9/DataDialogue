@@ -23,6 +23,7 @@ class Database(models.Model):
 
 class Conversation(models.Model):
     conversation_id = models.AutoField(primary_key=True)
+    name = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
 

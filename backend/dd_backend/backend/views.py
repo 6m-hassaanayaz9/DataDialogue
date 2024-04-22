@@ -22,6 +22,9 @@ from django.contrib.auth.hashers import check_password, make_password
 
 
 from .models import User
+from .models import Database,Conversation,Message
+import requests
+import time
 
 import json
 
@@ -29,6 +32,112 @@ import jwt
 
 
 from datetime import datetime, timedelta
+
+
+
+
+def get_database_names(request):
+    databases = Database.objects.all()
+    database_names = [db.database_name for db in databases]
+    print(database_names)
+    return JsonResponse({'database_names': database_names})
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SaveMessage(View):
+    def post(self, request):
+        data = request.POST
+        query = data.get('query')
+        answer = data.get('response')
+        conversation_id = data.get('conversationId')
+        print("Received ", query, answer, conversation_id)
+        conversation = Conversation.objects.get(conversation_id=conversation_id)
+        message = Message(question=query, answer = answer, conversation= conversation)
+        message.save()
+        return JsonResponse({'status': 200, 'message': 'Message saved successfully'})
+
+
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CreateConversation(View):
+    def post(self, request):
+        data = request.POST
+        username = data.get('username')
+        database_name = data.get('database')
+        conversation_name = data.get('name')
+        print("Received ", username, database_name, conversation_name)
+        user = User.objects.get(username=username)
+        database = Database.objects.get(database_name=database_name)
+        conversation = Conversation(name=conversation_name, user=user, database=database)
+        conversation.save()
+        conversation_id = conversation.conversation_id
+        print("sending back conversation id", conversation_id)
+        return JsonResponse({'id': conversation_id,'name': conversation_name})
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoadPreviousView(View):
+    def post(self, request):
+        data = request.POST
+        conversation_id = int(data.get('id'))
+        conversation_name = data.get('name')
+        print(conversation_id, conversation_name)
+        conversation = Conversation.objects.get(conversation_id=conversation_id,name=conversation_name)
+        print(conversation)
+        messages = Message.objects.filter(conversation=conversation)
+
+        message_data = []
+        for message in messages:
+            message_data.append({
+                'question': message.question,
+                'answer': message.answer,
+               
+            })
+        print(message_data)
+        # # Return the chat history as JSON response
+        return JsonResponse({'messages': message_data}) 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ConversationsView(View):
+    def post(self, request):
+        data = request.POST
+        username = data.get('username')
+        database_name = data.get('database')
+        print("Received ", username, database_name)
+        conversations = Conversation.objects.filter(user__username=username, database__database_name=database_name)
+        conversation_dict = {conversation.conversation_id: conversation.name for conversation in conversations}
+        print(conversation_dict)
+        return JsonResponse({'conversations': conversation_dict})
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class QueryView(View):
+
+    def post(self, request):
+        data = request.POST
+        query = data.get('query')
+        time.sleep(2)
+        print("Query received:", query)
+        # answer = self.answer("How many males?")
+        # print ("Answer:", answer)
+        return JsonResponse({'status': 200, 'message': 'There are 15097 males in the database'})
+    # def answer(self,query):
+    #     url = 'https://e106-203-82-58-11.ngrok-free.app/'
+    #     params = {'auth': '123', 'question': query}
+    #     response = requests.get(url, params=params)
+    #     if response.status_code == 200:
+    #         return response.json
+    #     else:
+    #         print("Error:", response.status_code)
+
+
+
+
 
 
 
@@ -340,6 +449,6 @@ class LogoutView(View):
 
         except User.DoesNotExist:
             print("User not found")
-    return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+        return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
         
