@@ -391,3 +391,50 @@ class LogoutView(View):
         return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
         
+        
+        
+@method_decorator(csrf_exempt, name='dispatch')  
+class validateToken(View):
+    login_view = LoginView()
+    def post(self, request):
+        data = json.loads(request.body)
+        print("Data received in Validate Token:>>>", data)
+        user_id= data.get('user_id')
+        access_token = data.get('access_token')
+        print("Access token received:", access_token)
+        refresh_token = data.get('refresh_token')
+        print("Refresh token received:", refresh_token)
+        user = User.objects.get(user_id=user_id)
+        print("User details------------->:", user)
+        print("User access token------------->:", user.access_token["token"])
+        print("User access token------------->:", user.access_token["expiry"])
+        print("User refresh token------------->:", user.refresh_token["token"])
+        print("User refresh token------------->:", user.refresh_token["expiry"])
+        if user.access_token["token"]== access_token and user.refresh_token["token"]== refresh_token:            
+            print("Token is valid")
+            if user.access_token["expiry"] < datetime.utcnow().isoformat():
+                
+                
+                print("Access token is expired")
+                new_access_token = self.login_view.get_access_token(user_id, user.email)
+                #------------------------------------------------ye check karo ki new access token generate ho raha hai ya nahi
+                print("New access token generated:", new_access_token)
+                self.login_view.update_access_token(user_id, new_access_token)
+                print("Access token updated")
+                return JsonResponse({"status": 201, "message": "New access token created", "new_access_token": new_access_token}, status=201)
+            
+            
+            elif user.refresh_token["expiry"] < datetime.utcnow().isoformat():
+                print("Refresh token is expired")
+                
+                return JsonResponse({"status": 400, "message": "Refresh Token is invalid"}, status=200)
+            
+            
+            else:
+                print("Tokens are valid")
+                return JsonResponse({"status": 200, "message": "Token is valid"}, status=200)
+                
+        
+        else:
+            print(" Tokens are invalid")
+            return JsonResponse({"status": 400, "message": "Session expired Login again"}, status=400)
