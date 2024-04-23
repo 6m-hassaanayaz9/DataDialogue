@@ -123,17 +123,17 @@ class QueryView(View):
         query = data.get('query')
         time.sleep(2)
         print("Query received:", query)
-        # answer = self.answer("How many males?")
-        # print ("Answer:", answer)
-        return JsonResponse({'status': 200, 'message': 'There are 15097 males in the database'})
-    # def answer(self,query):
-    #     url = 'https://e106-203-82-58-11.ngrok-free.app/'
-    #     params = {'auth': '123', 'question': query}
-    #     response = requests.get(url, params=params)
-    #     if response.status_code == 200:
-    #         return response.json
-    #     else:
-    #         print("Error:", response.status_code)
+        answer = self.answer(query)
+        print ("Answer:", answer)
+        return JsonResponse({'status': 200, 'message': answer})
+    def answer(self,query):
+        url = 'https://499a-101-50-100-217.ngrok-free.app/'
+        params = {'auth': '123', 'question': query}
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            return response.json()['answer']
+        else:
+            print("Error:", response.status_code)
 
 
 
