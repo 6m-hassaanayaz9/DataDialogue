@@ -129,7 +129,7 @@ class QueryView(View):
     def answer(self,query):
         url = 'https://499a-101-50-100-217.ngrok-free.app/'
         params = {'auth': '123', 'question': query}
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=60)
         if response.status_code == 200:
             return response.json()['answer']
         else:
