@@ -438,4 +438,99 @@ class validateToken(View):
             print(" Tokens are invalid")
             return JsonResponse({"status": 400, "message": "Session expired Login again"}, status=400)
         
-  
+
+
+class GetDatabaseTableView(View):
+    def get(self, request):
+        try:
+            # Retrieve all database records
+            databases = Database.objects.all()
+            # Serialize the data
+            serialized_data = [{'database_name': db.database_name, 'access_key': db.access_key} for db in databases]
+                        
+            # Return the serialized data as JSON response
+            return JsonResponse({'status': 200, 'data': serialized_data})
+        except Exception as e:
+            # Handle any exceptions and return an error response
+            return JsonResponse({'status': 500, 'error': str(e)}, status=500)
+        
+        
+# @method_decorator(csrf_exempt, name='dispatch') 
+ 
+# class UpdateAccessKeyView(View):
+#     print("I am in UpdateAccessKeyView")
+#     def post(self, request):
+#         print("I am in post......")
+#         try:
+#             # Extract data from the POST request
+#             database_name = request.POST.get('database_name')
+#             updated_access_key = request.POST.get('access_key')
+#             print("I am in post......Received Database name:", database_name)
+#             print("Received Access key:", updated_access_key)
+
+#             # Retrieve the database record based on the database name
+#             database = Database.objects.get(database_name=database_name)
+#             print("Database record:", database)
+            
+
+#             # Update the access key
+#             database.access_key = updated_access_key
+#             database.save()
+
+#             return JsonResponse({'status': 200})
+
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)})
+
+#     def put(self, request):
+#         try:
+#             # Extract data from the PUT request
+#             print(" I am in putttttt Request data:", request.data)
+#             database_name = request.data.get('database_name')
+#             updated_access_key = request.data.get('access_key')
+
+#             # Retrieve the database record based on the database name
+#             database = Database.objects.get(database_name=database_name)
+
+#             # Update the access key
+#             database.access_key = updated_access_key
+#             database.save()
+
+#             return JsonResponse({'status': 200})
+
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)})
+        
+@method_decorator(csrf_exempt, name='dispatch') 
+class UpdateAccess(View):
+    def post(self, request):
+        data = request.POST
+        database_name = data.get('database_name')
+        updated_access_key = data.get('access_key')
+        print("Received ", database_name, updated_access_key)
+        
+        database =  Database.objects.get(database_name=database_name)
+        database.access_key=updated_access_key
+        database.save()
+        print("Access key updated")
+        
+        return JsonResponse({'status': 200, 'message': 'Message saved successfully'})
+
+@method_decorator(csrf_exempt, name='dispatch') 
+class Deldb(View):
+    def post(self, request):
+        try:
+            data = request.POST
+            database_name = data.get('database_name')
+
+            print("Received ", database_name)
+            
+            database =  Database.objects.get(database_name=database_name)
+            
+            database.delete()
+
+            return JsonResponse({'status': 200, 'message': 'Database deleted successfully'})
+        except Database.DoesNotExist:
+            return JsonResponse({'status': 404, 'message': 'Database not found'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
