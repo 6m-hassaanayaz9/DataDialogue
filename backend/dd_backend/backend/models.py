@@ -15,11 +15,11 @@ class Database(models.Model):
     access_key = models.CharField(max_length=255, blank=True, null=True)
     connection_string = models.CharField(max_length=255)
 
-# class AccessList(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     database = models.ForeignKey(Database, on_delete=models.CASCADE)
-#     class Meta:
-#         unique_together = (('user', 'database'),)
+class AccessList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    class Meta:
+        unique_together = (('user', 'database'),)
 
 class Conversation(models.Model):
     conversation_id = models.AutoField(primary_key=True)
