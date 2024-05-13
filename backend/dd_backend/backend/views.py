@@ -438,50 +438,98 @@ class validateToken(View):
             print(" Tokens are invalid")
             return JsonResponse({"status": 400, "message": "Session expired Login again"}, status=400)
         
-  
+
+class GetDatabaseTableView(View):
+    def get(self, request):
+        try:
+            # Retrieve all database records
+            databases = Database.objects.all()
+            # Serialize the data
+            serialized_data = [{'database_name': db.database_name, 'access_key': db.access_key} for db in databases]
+                        
+            # Return the serialized data as JSON response
+            return JsonResponse({'status': 200, 'data': serialized_data})
+        except Exception as e:
+            # Handle any exceptions and return an error response
+            return JsonResponse({'status': 500, 'error': str(e)}, status=500)
         
-@method_decorator(csrf_exempt, name='dispatch')  
-class validateToken(View):
-    login_view = LoginView()
+        
+# @method_decorator(csrf_exempt, name='dispatch') 
+ 
+# class UpdateAccessKeyView(View):
+#     print("I am in UpdateAccessKeyView")
+#     def post(self, request):
+#         print("I am in post......")
+#         try:
+#             # Extract data from the POST request
+#             database_name = request.POST.get('database_name')
+#             updated_access_key = request.POST.get('access_key')
+#             print("I am in post......Received Database name:", database_name)
+#             print("Received Access key:", updated_access_key)
+
+#             # Retrieve the database record based on the database name
+#             database = Database.objects.get(database_name=database_name)
+#             print("Database record:", database)
+            
+
+#             # Update the access key
+#             database.access_key = updated_access_key
+#             database.save()
+
+#             return JsonResponse({'status': 200})
+
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)})
+
+#     def put(self, request):
+#         try:
+#             # Extract data from the PUT request
+#             print(" I am in putttttt Request data:", request.data)
+#             database_name = request.data.get('database_name')
+#             updated_access_key = request.data.get('access_key')
+
+#             # Retrieve the database record based on the database name
+#             database = Database.objects.get(database_name=database_name)
+
+#             # Update the access key
+#             database.access_key = updated_access_key
+#             database.save()
+
+#             return JsonResponse({'status': 200})
+
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)})
+        
+@method_decorator(csrf_exempt, name='dispatch') 
+class UpdateAccess(View):
     def post(self, request):
-        data = json.loads(request.body)
-        print("Data received in Validate Token:>>>", data)
-        user_id= data.get('user_id')
-        access_token = data.get('access_token')
-        print("Access token received:", access_token)
-        refresh_token = data.get('refresh_token')
-        print("Refresh token received:", refresh_token)
-        user = User.objects.get(user_id=user_id)
-        print("User details------------->:", user)
-        print("User access token------------->:", user.access_token["token"])
-        print("User access token------------->:", user.access_token["expiry"])
-        print("User refresh token------------->:", user.refresh_token["token"])
-        print("User refresh token------------->:", user.refresh_token["expiry"])
-        if user.access_token["token"]== access_token and user.refresh_token["token"]== refresh_token:            
-            print("Token is valid")
-            if user.access_token["expiry"] < datetime.utcnow().isoformat():
-                
-                
-                print("Access token is expired")
-                new_access_token = self.login_view.get_access_token(user_id, user.email)
-                #------------------------------------------------ye check karo ki new access token generate ho raha hai ya nahi
-                print("New access token generated:", new_access_token)
-                self.login_view.update_access_token(user_id, new_access_token)
-                print("Access token updated")
-                return JsonResponse({"status": 201, "message": "New access token created", "new_access_token": new_access_token}, status=201)
-            
-            
-            elif user.refresh_token["expiry"] < datetime.utcnow().isoformat():
-                print("Refresh token is expired")
-                
-                return JsonResponse({"status": 400, "message": "Refresh Token is invalid"}, status=200)
-            
-            
-            else:
-                print("Tokens are valid")
-                return JsonResponse({"status": 200, "message": "Token is valid"}, status=200)
-                
+        data = request.POST
+        database_name = data.get('database_name')
+        updated_access_key = data.get('access_key')
+        print("Received ", database_name, updated_access_key)
         
-        else:
-            print(" Tokens are invalid")
-            return JsonResponse({"status": 400, "message": "Session expired Login again"}, status=400)
+        database =  Database.objects.get(database_name=database_name)
+        database.access_key=updated_access_key
+        database.save()
+        print("Access key updated")
+        
+        return JsonResponse({'status': 200, 'message': 'Message saved successfully'})
+
+@method_decorator(csrf_exempt, name='dispatch') 
+class Deldb(View):
+    def post(self, request):
+        try:
+            data = request.POST
+            database_name = data.get('database_name')
+
+            print("Received ", database_name)
+            
+            database =  Database.objects.get(database_name=database_name)
+            
+            database.delete()
+
+            return JsonResponse({'status': 200, 'message': 'Database deleted successfully'})
+        except Database.DoesNotExist:
+            return JsonResponse({'status': 404, 'message': 'Database not found'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
