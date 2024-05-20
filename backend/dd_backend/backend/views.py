@@ -22,7 +22,7 @@ from django.contrib.auth.hashers import check_password, make_password
 
 
 from .models import User
-from .models import Database,Conversation,Message
+from .models import Database,Conversation,Message,AccessList
 import requests
 import time
 
@@ -35,12 +35,49 @@ from datetime import datetime, timedelta
 
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AccessPrivateDatabase(View):
+    def post(self, request):
+        data = request.POST
+        access_key = data.get('access_key')
+        user_id = data.get("user_id")
+        present_databases = data.get('present_databases').split(",")
+        print("Received ", access_key,user_id, "present received :::: " , present_databases ) 
+        database = []
+        try:
+            database_objects = Database.objects.get(access_key=access_key)
+        except Database.DoesNotExist :
+            return JsonResponse({'name': 'invalid'})
+        
+        if database_objects.database_name in present_databases:
+            return JsonResponse({'name': 'already'})
+        user = User.objects.get(user_id=user_id)
+        access_entry = AccessList(user=user, database=database_objects)
+        access_entry.save()
+        return JsonResponse({'name': database_objects.database_name})
+        
 
-def get_database_names(request):
-    databases = Database.objects.all()
-    database_names = [db.database_name for db in databases]
-    print(database_names)
-    return JsonResponse({'database_names': database_names})
+
+
+     
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetDatabaseNames(View):
+    def post(self,request):
+        data = request.POST
+        user_id = data.get('user_id')
+        print("user id is <LLLLLLL  " ,user_id)
+        public_databases_objects = Database.objects.filter(access_key = 0)
+        public_databases = [database.database_name for database in public_databases_objects]
+        print(public_databases)
+        user = User.objects.get(user_id=user_id)
+        private_databases = []
+        access_entries = AccessList.objects.filter(user=user)
+        if access_entries is not None:
+             private_databases = [entry.database.database_name for entry in access_entries]
+        database_names = list(public_databases) + list(private_databases)
+        print(database_names)
+        return JsonResponse({'database_names': database_names})
 
 
 
