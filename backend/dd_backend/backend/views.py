@@ -158,14 +158,17 @@ class QueryView(View):
     def post(self, request):
         data = request.POST
         query = data.get('query')
+        print("Received ", query)
+        database_name= data.get('database')
+        print("Database name received:", database_name)
         time.sleep(2)
         print("Query received:", query)
-        answer = self.answer(query)
+        answer = self.answer(query, database_name)
         print ("Answer:", answer)
         return JsonResponse({'status': 200, 'message': answer})
-    def answer(self,query):
-        url = 'https://499a-101-50-100-217.ngrok-free.app/'
-        params = {'auth': '123', 'question': query}
+    def answer(self,query,database_name):
+        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/'
+        params = {'auth': '123', 'question': query, 'database': database_name}
         response = requests.get(url, params=params)
         if response.status_code == 200:
             return response.json()['answer']
