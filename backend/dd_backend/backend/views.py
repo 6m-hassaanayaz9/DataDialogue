@@ -158,22 +158,59 @@ class QueryView(View):
     def post(self, request):
         data = request.POST
         query = data.get('query')
+        print("Received ", query)
+        database_name= data.get('database')
+        print("Database name received:", database_name)
         time.sleep(2)
         print("Query received:", query)
-        answer = self.answer(query)
-        print ("Answer:", answer)
-        return JsonResponse({'status': 200, 'message': answer})
-    def answer(self,query):
-        url = 'https://499a-101-50-100-217.ngrok-free.app/'
-        params = {'auth': '123', 'question': query}
+        reply = self.answer(query, database_name)
+        
+        print ("Answer:", reply.answer)
+        
+        return JsonResponse({'status': 200, 'message': reply.answer, 'remaining': reply.remaining})
+    def answer(self,query,database_name):
+        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/'
+        params = {'auth': '123', 'question': query, 'database': database_name }
         response = requests.get(url, params=params)
         if response.status_code == 200:
-            return response.json()['answer']
+            
+            # return response.json()['answer']
+            rem_len= response.json()['remaining']
+            answer =response.json()['answer']
+            
+            
+            if isinstance(answer, str):
+                # Assuming the answer is a single string with list items separated by new lines
+                
+                answer_list = reply.answer.split('\n')
+                
+                return {"answer":answer_list,"remaining":rem_len}
+            return {"answer":answer,"remaining":rem_len}
         else:
             print("Error:", response.status_code)
+            return "Error in fetching data"
 
 
-
+@method_decorator(csrf_exempt, name='dispatch')
+class GenerateMoreData(View):
+    def post(self, request):
+        data = request.POST
+        database_name = data.get('database_name')
+        print("Database ", database_name)
+        time.sleep(2)
+        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/generate-more'
+        params = {'auth': '123', 'database_name': database_name}
+        response = requests.get(url, params=params)
+        print ("Answer:", reply)
+        
+        
+        return JsonResponse({'status': 200, 'message': reply})
+        
+        if response.status_code == 200:
+            return JsonResponse({'status': 200, 'message': response.json()['data']})            
+        else:
+            print("Error:", response.status_code)
+            return "Error in fetching data"
 
 
 
@@ -568,5 +605,43 @@ class Deldb(View):
             return JsonResponse({'status': 200, 'message': 'Database deleted successfully'})
         except Database.DoesNotExist:
             return JsonResponse({'status': 404, 'message': 'Database not found'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetUserTableView(View):
+    def get(self, request):
+        try:
+            # Retrieve all database records
+            user = User.objects.all()
+            # Serialize the data
+            serialized_data = [{'username': usr.username, 'email': usr.email} for usr in user]
+                        
+            # Return the serialized data as JSON response
+            return JsonResponse({'status': 200, 'data': serialized_data})
+        except Exception as e:
+            # Handle any exceptions and return an error response
+            return JsonResponse({'status': 500, 'error': str(e)}, status=500)
+        
+        
+        
+
+@method_decorator(csrf_exempt, name='dispatch')
+class Deluser(View):
+    def post(self, request):
+        try:
+            data = request.POST
+            username = data.get('username')
+
+            print("Received ", username)
+            
+            user =  User.objects.get(username=username)
+            
+            user.delete()
+
+            return JsonResponse({'status': 200, 'message': 'User deleted successfully'})
+        except User.DoesNotExist:
+            return JsonResponse({'status': 404, 'message': 'User not found'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
