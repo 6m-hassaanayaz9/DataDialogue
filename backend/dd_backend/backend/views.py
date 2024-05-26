@@ -206,6 +206,7 @@ class GenerateMoreData(View):
 
         
         if response.status_code == 200:
+            print("responseDARAAaaaa",response.json())
             return JsonResponse({'status': 200, 'message': response.json()['data']})            
         else:
             print("Error:", response.status_code)
