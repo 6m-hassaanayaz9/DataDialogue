@@ -165,27 +165,29 @@ class QueryView(View):
         print("Query received:", query)
         reply = self.answer(query, database_name)
         
-        print ("Answer:", reply.answer)
-        
-        return JsonResponse({'status': 200, 'message': reply.answer, 'remaining': reply.remaining})
+        print ("Answerrrrrr:", reply['answer'])
+        print ("Remainingggggg:", reply['remaining'])
+        return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining']})
     def answer(self,query,database_name):
-        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/'
+        url = 'https://14bf-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }
         response = requests.get(url, params=params)
         if response.status_code == 200:
-            
+            print ("responseeeeeeeeee:", response.json())
             # return response.json()['answer']
             rem_len= response.json()['remaining']
             answer =response.json()['answer']
             
             
+            
             if isinstance(answer, str):
                 # Assuming the answer is a single string with list items separated by new lines
                 
-                answer_list = reply.answer.split('\n')
-                
-                return {"answer":answer_list,"remaining":rem_len}
-            return {"answer":answer,"remaining":rem_len}
+                answer_list = answer.split('\n')
+                reply = {"answer":answer_list,"remaining":rem_len}
+                return reply
+            reply = {"answer":answer,"remaining":rem_len}
+            return reply
         else:
             print("Error:", response.status_code)
             return "Error in fetching data"
@@ -198,13 +200,10 @@ class GenerateMoreData(View):
         database_name = data.get('database_name')
         print("Database ", database_name)
         time.sleep(2)
-        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/generate-more'
+        url = 'https://14bf-58-65-147-56.ngrok-free.app/generate-more'
         params = {'auth': '123', 'database_name': database_name}
         response = requests.get(url, params=params)
-        print ("Answer:", reply)
-        
-        
-        return JsonResponse({'status': 200, 'message': reply})
+
         
         if response.status_code == 200:
             return JsonResponse({'status': 200, 'message': response.json()['data']})            
