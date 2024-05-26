@@ -201,13 +201,14 @@ class GenerateMoreData(View):
         print("Database ", database_name)
         time.sleep(2)
         url = 'https://14bf-58-65-147-56.ngrok-free.app/generate-more'
-        params = {'auth': '123', 'database_name': database_name}
+        params = {'auth': '123', 'database': database_name}
         response = requests.get(url, params=params)
 
         
         if response.status_code == 200:
             print("responseDARAAaaaa",response.json())
-            return JsonResponse({'status': 200, 'message': response.json()['data']})            
+            print("responseDARAAaaaa Data>>>>>>>>>>>>",response.json()['data'])
+            return JsonResponse({'status': 200, 'message': response.json()['data'], 'remaining': response.json()['remaining']})            
         else:
             print("Error:", response.status_code)
             return "Error in fetching data"
