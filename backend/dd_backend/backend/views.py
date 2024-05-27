@@ -164,41 +164,75 @@ class QueryView(View):
         time.sleep(2)
         print("Query received:", query)
         reply = self.answer(query, database_name)
+        print ("Replyyyyy:", reply)
+        if(reply['is_tabular']):
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"]})
         
-        print ("Answerrrrrr:", reply['answer'])
-        print ("Remainingggggg:", reply['remaining'])
-        return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining']})
-    def answer(self,query,database_name):
-        url = 'http://127.0.0.1:12345/'
+            print ("Answerrrrrr:", reply['answer'])
+            print ("Remainingggggg:", reply['remaining'])
+        else:
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
+    # def answer(self,query,database_name):
+    #     url = 'https://25f9-58-65-147-56.ngrok-free.app/'
+    #     params = {'auth': '123', 'question': query, 'database': database_name }
+    #     response = requests.get(url, params=params)
+    #     if response.status_code == 200:
+    #         print ("responseeeeeeeeee:", response.json())
+    #         # return response.json()['answer']
+    #         rem_len= response.json()['remaining']
+    #         answer =response.json()['answer']        
+    #         headers=response.json()['headers']
+    #         print("Headers:", headers)
+    #         is_tabular = response.json()['is_tabular']
+    #         print("Is tabular:", is_tabular)
+    #         if is_tabular:
+    #             # Assuming the answer is a tabular data
+                
+    #             answer_list = answer
+                
+    #             reply = {"answer":answer_list,"headers": headers ,"remaining":rem_len, "is_tabular": is_tabular}
+    #             return reply
+    #         if isinstance(answer, str):
+    #             # Assuming the answer is a single string with list items separated by new lines
+                
+    #             answer_list = answer.split('\n')
+    #             reply = {"answer":answer_list,"remaining":rem_len, "is_tabular": is_tabular}
+    #             return reply
+            
+    #         reply = {"answer":answer,"remaining":rem_len, "is_tabular": is_tabular}
+    #         return reply
+    #     else:
+    #         print("Error:", response.status_code)
+    #         return "Error in fetching data"
+    def answer(self, query, database_name):
+        url = 'https://25f9-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }
         response = requests.get(url, params=params)
         if response.status_code == 200:
-            print ("responseeeeeeeeee:", response.json())
-            # return response.json()['answer']
-            rem_len= response.json()['remaining']
-            answer =response.json()['answer']        
-            headers=response.json()['headers']
-            print("Headers:", headers)
+            rem_len = response.json()['remaining']
+            answer = response.json()['answer']        
+            headers = response.json()['headers']
             is_tabular = response.json()['is_tabular']
-            print("Is tabular:", is_tabular)
+
             if isinstance(answer, str):
-                # Assuming the answer is a single string with list items separated by new lines
-                
                 answer_list = answer.split('\n')
-                reply = {"answer":answer_list,"remaining":rem_len, "is_tabular": is_tabular}
+                reply = {
+                    "answer": answer_list,
+                    "remaining": rem_len,
+                    "is_tabular": is_tabular,
+                    "headers": headers
+                }
                 return reply
-            # if is_tabular:
-            #     # Assuming the answer is a tabular data
-                
-            #     answer_list = answer
-                
-            #     reply = {"answer":answer_list,"headers": headers ,"remaining":rem_len, "is_tabular": is_tabular}
-            #     return reply
-            reply = {"answer":answer,"remaining":rem_len, "is_tabular": is_tabular}
+
+            reply = {
+                "answer": answer,
+                "remaining": rem_len,
+                "is_tabular": is_tabular,
+                "headers": headers
+            }
             return reply
         else:
-            print("Error:", response.status_code)
-            return "Error in fetching data"
+            return {"answer": "Error in fetching data", "remaining": 0, "is_tabular": False, "headers": []}
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -208,7 +242,7 @@ class GenerateMoreData(View):
         database_name = data.get('database_name')
         print("Database ", database_name)
         time.sleep(2)
-        url = 'http://127.0.0.1:12345/generate-more'
+        url = 'https://25f9-58-65-147-56.ngrok-free.app/generate-more'
         params = {'auth': '123', 'database': database_name}
         response = requests.get(url, params=params)
 
