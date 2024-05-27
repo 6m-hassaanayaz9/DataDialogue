@@ -19,10 +19,10 @@ urlpatterns = [
     path('save-message/',SaveMessage.as_view(), name='save-message'),
     path('validateToken/',validateToken.as_view(), name='validateToken'),
     path('api/get_database_table', GetDatabaseTableView.as_view(), name='get_database_table'),
+    path('api/get_user_table',GetUserTableView.as_view(), name='get_user_table'),
     path('api/update_access_key/', UpdateAccess.as_view(), name='update_access_key'),
     path('api/deldb/', Deldb.as_view(), name='deldb'),
     path('access-private-database/',AccessPrivateDatabase.as_view(), name='access-private-database'),
-    path('api/get_user_table/',GetUserTableView.as_view(), name='get_user_table'),
     path('api/deluser/', Deluser.as_view(), name='deluser'),
     path('api/generate-more-data/', GenerateMoreData.as_view(), name='generate-more-data')
 ]

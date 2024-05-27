@@ -164,31 +164,75 @@ class QueryView(View):
         time.sleep(2)
         print("Query received:", query)
         reply = self.answer(query, database_name)
+        print ("Replyyyyy:", reply)
+        if(reply['is_tabular']):
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"]})
         
-        print ("Answer:", reply.answer)
-        
-        return JsonResponse({'status': 200, 'message': reply.answer, 'remaining': reply.remaining})
-    def answer(self,query,database_name):
-        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/'
+            print ("Answerrrrrr:", reply['answer'])
+            print ("Remainingggggg:", reply['remaining'])
+        else:
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
+    # def answer(self,query,database_name):
+    #     url = 'https://25f9-58-65-147-56.ngrok-free.app/'
+    #     params = {'auth': '123', 'question': query, 'database': database_name }
+    #     response = requests.get(url, params=params)
+    #     if response.status_code == 200:
+    #         print ("responseeeeeeeeee:", response.json())
+    #         # return response.json()['answer']
+    #         rem_len= response.json()['remaining']
+    #         answer =response.json()['answer']        
+    #         headers=response.json()['headers']
+    #         print("Headers:", headers)
+    #         is_tabular = response.json()['is_tabular']
+    #         print("Is tabular:", is_tabular)
+    #         if is_tabular:
+    #             # Assuming the answer is a tabular data
+                
+    #             answer_list = answer
+                
+    #             reply = {"answer":answer_list,"headers": headers ,"remaining":rem_len, "is_tabular": is_tabular}
+    #             return reply
+    #         if isinstance(answer, str):
+    #             # Assuming the answer is a single string with list items separated by new lines
+                
+    #             answer_list = answer.split('\n')
+    #             reply = {"answer":answer_list,"remaining":rem_len, "is_tabular": is_tabular}
+    #             return reply
+            
+    #         reply = {"answer":answer,"remaining":rem_len, "is_tabular": is_tabular}
+    #         return reply
+    #     else:
+    #         print("Error:", response.status_code)
+    #         return "Error in fetching data"
+    def answer(self, query, database_name):
+        url = 'https://25f9-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }
         response = requests.get(url, params=params)
         if response.status_code == 200:
-            
-            # return response.json()['answer']
-            rem_len= response.json()['remaining']
-            answer =response.json()['answer']
-            
-            
+            rem_len = response.json()['remaining']
+            answer = response.json()['answer']        
+            headers = response.json()['headers']
+            is_tabular = response.json()['is_tabular']
+
             if isinstance(answer, str):
-                # Assuming the answer is a single string with list items separated by new lines
-                
-                answer_list = reply.answer.split('\n')
-                
-                return {"answer":answer_list,"remaining":rem_len}
-            return {"answer":answer,"remaining":rem_len}
+                answer_list = answer.split('\n')
+                reply = {
+                    "answer": answer_list,
+                    "remaining": rem_len,
+                    "is_tabular": is_tabular,
+                    "headers": headers
+                }
+                return reply
+
+            reply = {
+                "answer": answer,
+                "remaining": rem_len,
+                "is_tabular": is_tabular,
+                "headers": headers
+            }
+            return reply
         else:
-            print("Error:", response.status_code)
-            return "Error in fetching data"
+            return {"answer": "Error in fetching data", "remaining": 0, "is_tabular": False, "headers": []}
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -198,16 +242,15 @@ class GenerateMoreData(View):
         database_name = data.get('database_name')
         print("Database ", database_name)
         time.sleep(2)
-        url = 'https://ef23-2402-e000-620-160-541e-ee52-34bf-8ca4.ngrok-free.app/generate-more'
-        params = {'auth': '123', 'database_name': database_name}
+        url = 'https://25f9-58-65-147-56.ngrok-free.app/generate-more'
+        params = {'auth': '123', 'database': database_name}
         response = requests.get(url, params=params)
-        print ("Answer:", reply)
-        
-        
-        return JsonResponse({'status': 200, 'message': reply})
+
         
         if response.status_code == 200:
-            return JsonResponse({'status': 200, 'message': response.json()['data']})            
+            print("responseDARAAaaaa",response.json())
+            print("responseDARAAaaaa Data>>>>>>>>>>>>",response.json()['data'])
+            return JsonResponse({'status': 200, 'message': response.json()['data'], 'remaining': response.json()['remaining']})            
         else:
             print("Error:", response.status_code)
             return "Error in fetching data"
@@ -513,6 +556,22 @@ class validateToken(View):
             return JsonResponse({"status": 400, "message": "Session expired Login again"}, status=400)
         
 
+@method_decorator(csrf_exempt, name='dispatch')
+class GetUserTableView(View):
+    def get(self, request):
+        try:
+            # Retrieve all user records
+            users = User.objects.all()
+            # Serialize the data
+            serialized_data = [{'username': usr.username, 'email': usr.email} for usr in users]
+            
+            # Return the serialized data as JSON response
+            return JsonResponse({'status': 200, 'data': serialized_data})
+        except Exception as e:
+            # Handle any exceptions and return an error response
+            return JsonResponse({'status': 500, 'error': str(e)}, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
 class GetDatabaseTableView(View):
     def get(self, request):
         try:
@@ -520,59 +579,50 @@ class GetDatabaseTableView(View):
             databases = Database.objects.all()
             # Serialize the data
             serialized_data = [{'database_name': db.database_name, 'access_key': db.access_key} for db in databases]
-                        
+            
             # Return the serialized data as JSON response
             return JsonResponse({'status': 200, 'data': serialized_data})
         except Exception as e:
             # Handle any exceptions and return an error response
             return JsonResponse({'status': 500, 'error': str(e)}, status=500)
-        
-        
-# @method_decorator(csrf_exempt, name='dispatch') 
- 
-# class UpdateAccessKeyView(View):
-#     print("I am in UpdateAccessKeyView")
-#     def post(self, request):
-#         print("I am in post......")
+
+
+
+
+
+
+
+# @method_decorator(csrf_exempt, name='dispatch')
+# class GetDatabaseTableView(View):
+#     def get(self, request):
 #         try:
-#             # Extract data from the POST request
-#             database_name = request.POST.get('database_name')
-#             updated_access_key = request.POST.get('access_key')
-#             print("I am in post......Received Database name:", database_name)
-#             print("Received Access key:", updated_access_key)
-
-#             # Retrieve the database record based on the database name
-#             database = Database.objects.get(database_name=database_name)
-#             print("Database record:", database)
-            
-
-#             # Update the access key
-#             database.access_key = updated_access_key
-#             database.save()
-
-#             return JsonResponse({'status': 200})
-
+#             # Retrieve all database records
+#             databases = Database.objects.all()
+#             # Serialize the data
+#             serialized_data = [{'database_name': db.database_name, 'access_key': db.access_key} for db in databases]
+                        
+#             # Return the serialized data as JSON response
+#             return JsonResponse({'status': 200, 'data': serialized_data})
 #         except Exception as e:
-#             return JsonResponse({'status': 'error', 'message': str(e)})
-
-#     def put(self, request):
+#             # Handle any exceptions and return an error response
+#             return JsonResponse({'status': 500, 'error': str(e)}, status=500)
+        
+# @method_decorator(csrf_exempt, name='dispatch')
+# class GetUserTableView(View):
+#     def get(self, request):
 #         try:
-#             # Extract data from the PUT request
-#             print(" I am in putttttt Request data:", request.data)
-#             database_name = request.data.get('database_name')
-#             updated_access_key = request.data.get('access_key')
-
-#             # Retrieve the database record based on the database name
-#             database = Database.objects.get(database_name=database_name)
-
-#             # Update the access key
-#             database.access_key = updated_access_key
-#             database.save()
-
-#             return JsonResponse({'status': 200})
-
+#             # Retrieve all database records
+#             user = User.objects.all()
+#             # Serialize the data
+#             serialized_data = [{'username': usr.username, 'email': usr.email} for usr in user]
+                        
+#             # Return the serialized data as JSON response
+#             return JsonResponse({'status': 200, 'data': serialized_data})
 #         except Exception as e:
-#             return JsonResponse({'status': 'error', 'message': str(e)})
+#             # Handle any exceptions and return an error response
+#             return JsonResponse({'status': 500, 'error': str(e)}, status=500)        
+
+
         
 @method_decorator(csrf_exempt, name='dispatch') 
 class UpdateAccess(View):
@@ -609,20 +659,7 @@ class Deldb(View):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class GetUserTableView(View):
-    def get(self, request):
-        try:
-            # Retrieve all database records
-            user = User.objects.all()
-            # Serialize the data
-            serialized_data = [{'username': usr.username, 'email': usr.email} for usr in user]
-                        
-            # Return the serialized data as JSON response
-            return JsonResponse({'status': 200, 'data': serialized_data})
-        except Exception as e:
-            # Handle any exceptions and return an error response
-            return JsonResponse({'status': 500, 'error': str(e)}, status=500)
+
         
         
         
@@ -645,3 +682,4 @@ class Deluser(View):
             return JsonResponse({'status': 404, 'message': 'User not found'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+
