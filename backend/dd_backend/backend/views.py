@@ -90,7 +90,7 @@ class SaveMessage(View):
         conversation_id = data.get('conversationId')
         print("Received ", query, answer, conversation_id)
         conversation = Conversation.objects.get(conversation_id=conversation_id)
-        message = Message(question=query, answer = answer, conversation= conversation)
+        message = Message(question=query, answer = answer, conversation= conversation, is_tabular=data.get('is_tabular'), headers=data.get('headers'))
         message.save()
         return JsonResponse({'status': 200, 'message': 'Message saved successfully'})
 
@@ -132,6 +132,8 @@ class LoadPreviousView(View):
             message_data.append({
                 'question': message.question,
                 'answer': message.answer,
+                'is_tabular': message.is_tabular,
+                'headers': message.headers
                
             })
         print(message_data)
@@ -172,38 +174,7 @@ class QueryView(View):
             print ("Remainingggggg:", reply['remaining'])
         else:
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
-    # def answer(self,query,database_name):
-    #     url = 'https://25f9-58-65-147-56.ngrok-free.app/'
-    #     params = {'auth': '123', 'question': query, 'database': database_name }
-    #     response = requests.get(url, params=params)
-    #     if response.status_code == 200:
-    #         print ("responseeeeeeeeee:", response.json())
-    #         # return response.json()['answer']
-    #         rem_len= response.json()['remaining']
-    #         answer =response.json()['answer']        
-    #         headers=response.json()['headers']
-    #         print("Headers:", headers)
-    #         is_tabular = response.json()['is_tabular']
-    #         print("Is tabular:", is_tabular)
-    #         if is_tabular:
-    #             # Assuming the answer is a tabular data
-                
-    #             answer_list = answer
-                
-    #             reply = {"answer":answer_list,"headers": headers ,"remaining":rem_len, "is_tabular": is_tabular}
-    #             return reply
-    #         if isinstance(answer, str):
-    #             # Assuming the answer is a single string with list items separated by new lines
-                
-    #             answer_list = answer.split('\n')
-    #             reply = {"answer":answer_list,"remaining":rem_len, "is_tabular": is_tabular}
-    #             return reply
-            
-    #         reply = {"answer":answer,"remaining":rem_len, "is_tabular": is_tabular}
-    #         return reply
-    #     else:
-    #         print("Error:", response.status_code)
-    #         return "Error in fetching data"
+    
     def answer(self, query, database_name):
         url = 'https://2cd9-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }

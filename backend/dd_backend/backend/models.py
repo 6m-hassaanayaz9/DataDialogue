@@ -34,6 +34,8 @@ class Message(models.Model):
     question = models.TextField()
     answer = models.TextField()
     time_stamp = models.DateTimeField(auto_now_add=True)
+    is_tabular = models.BooleanField(default=False)  # Boolean field for is_tabular
+    headers = models.JSONField(default=list)
 
 class Prompt(models.Model):
     prompt_id = models.AutoField(primary_key=True)
