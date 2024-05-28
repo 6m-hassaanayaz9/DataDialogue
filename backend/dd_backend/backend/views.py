@@ -205,7 +205,7 @@ class QueryView(View):
     #         print("Error:", response.status_code)
     #         return "Error in fetching data"
     def answer(self, query, database_name):
-        url = 'https://8c0c-185-216-231-47.ngrok-free.app/'
+        url = 'https://2cd9-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }
         response = requests.get(url, params=params)
         if response.status_code == 200:
@@ -242,7 +242,7 @@ class GenerateMoreData(View):
         database_name = data.get('database_name')
         print("Database ", database_name)
         time.sleep(2)
-        url = 'https://8c0c-185-216-231-47.ngrok-free.app/generate-more'
+        url = 'https://2cd9-58-65-147-56.ngrok-free.app/generate-more'
         params = {'auth': '123', 'database': database_name}
         response = requests.get(url, params=params)
 
