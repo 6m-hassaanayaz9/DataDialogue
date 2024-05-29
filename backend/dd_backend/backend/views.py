@@ -27,6 +27,7 @@ import requests
 import time
 
 import json
+import ast
 
 import jwt
 
@@ -89,8 +90,22 @@ class SaveMessage(View):
         answer = data.get('response')
         conversation_id = data.get('conversationId')
         print("Received ", query, answer, conversation_id)
+        tableData = data.get('tableData')
+        try:
+            
+            tableData=json.loads(tableData)
+            print("Table data received::;;;", tableData)
+        except:
+            pass
+        # tableData= ast.literal_eval(tableData)
+        print("Table data astttttttttttt", tableData)
+        is_tabular=data.get('is_tabular')
+        if is_tabular.strip().lower() == 'true':
+           is_tabular = True
+        else:
+            is_tabular = False
         conversation = Conversation.objects.get(conversation_id=conversation_id)
-        message = Message(question=query, answer = answer, conversation= conversation, is_tabular=data.get('is_tabular'), headers=data.get('headers'))
+        message = Message(question=query, answer = answer, conversation= conversation, is_tabular=is_tabular, headers=data.get('headers'), tableData=tableData)
         message.save()
         return JsonResponse({'status': 200, 'message': 'Message saved successfully'})
 
@@ -126,14 +141,21 @@ class LoadPreviousView(View):
         conversation = Conversation.objects.get(conversation_id=conversation_id,name=conversation_name)
         print(conversation)
         messages = Message.objects.filter(conversation=conversation)
+        
 
         message_data = []
         for message in messages:
+            try:
+                tableData=message.tableData['tableData']
+            except:
+                pass
+            
             message_data.append({
                 'question': message.question,
                 'answer': message.answer,
                 'is_tabular': message.is_tabular,
-                'headers': message.headers
+                'headers': message.headers.split(","),
+                'tableData': tableData
                
             })
         print(message_data)
@@ -176,7 +198,7 @@ class QueryView(View):
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
     
     def answer(self, query, database_name):
-        url = 'https://2cd9-58-65-147-56.ngrok-free.app/'
+        url = 'https://afcc-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }
         response = requests.get(url, params=params)
         if response.status_code == 200:
@@ -213,15 +235,22 @@ class GenerateMoreData(View):
         database_name = data.get('database_name')
         print("Database ", database_name)
         time.sleep(2)
-        url = 'https://2cd9-58-65-147-56.ngrok-free.app/generate-more'
+        
+        url = 'https://afcc-58-65-147-56.ngrok-free.app/generate-more'
+        
         params = {'auth': '123', 'database': database_name}
+        
         response = requests.get(url, params=params)
 
         
         if response.status_code == 200:
             print("responseDARAAaaaa",response.json())
             print("responseDARAAaaaa Data>>>>>>>>>>>>",response.json()['data'])
-            return JsonResponse({'status': 200, 'message': response.json()['data'], 'remaining': response.json()['remaining']})            
+            if(response.json()['is_tabular']):
+                return JsonResponse({'status': 200, 'message':response.json()['data'], 'remaining': response.json()['remaining'], 'headers': response.json()['headers'], 'is_tabular': response.json()['is_tabular']})
+            else:
+                return JsonResponse({'status': 200, 'message': response.json()['data'], 'remaining': response.json()['remaining'], 'is_tabular': response.json()['is_tabular']})
+            
         else:
             print("Error:", response.status_code)
             return "Error in fetching data"
