@@ -46,8 +46,10 @@ class AccessPrivateDatabase(View):
         print("Received ", access_key,user_id, "present received :::: " , present_databases ) 
         database = []
         try:
+            if(access_key.strip()=='0'):
+                raise Database.DoesNotExist
             database_objects = Database.objects.get(access_key=access_key)
-        except Database.DoesNotExist :
+        except Database.DoesNotExist:
             return JsonResponse({'name': 'invalid'})
         
         if database_objects.database_name in present_databases:
@@ -379,9 +381,9 @@ class LoginView(View):
 
         # Define expiration time based on token type
         if token_type == 'refresh':
-            expiry_time = datetime.utcnow() + timedelta(days=1)  # Refresh token expires in 1 day
+            expiry_time = datetime.utcnow() + timedelta(days=3)  # Refresh token expires in 1 day
         elif token_type == 'access':
-            expiry_time = datetime.utcnow() + timedelta(minutes=15)  # Access token expires in 15 minutes
+            expiry_time = datetime.utcnow() + timedelta(days=1)  # Access token expires in 15 minutes
         else:
             raise ValueError("Invalid token type")
         # Create payload for the token
@@ -425,7 +427,7 @@ class LoginView(View):
                 user = User.objects.get(user_id=user_id)
 
 
-                user.refresh_token = {"token": refresh_token, "expiry": (datetime.utcnow() + timedelta(days=1)).isoformat()}
+                user.refresh_token = {"token": refresh_token, "expiry": (datetime.utcnow() + timedelta(days=3)).isoformat()}
 
 
                 user.save()
