@@ -32,8 +32,11 @@ class Message(models.Model):
     message_id = models.AutoField(primary_key=True)
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     question = models.TextField()
-    answer = models.TextField()
+    answer = models.TextField(default=None, blank=True, null=True)
     time_stamp = models.DateTimeField(auto_now_add=True)
+    is_tabular = models.BooleanField(default=False)  # Boolean field for is_tabular
+    headers = models.JSONField(default=list, null=True, blank=True)
+    tableData = models.JSONField(default=list, null=True, blank=True) 
 
 class Prompt(models.Model):
     prompt_id = models.AutoField(primary_key=True)
