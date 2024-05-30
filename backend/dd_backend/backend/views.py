@@ -1,4 +1,3 @@
-from django.shortcuts import render
 
 # Create your views here.
 
@@ -23,16 +22,15 @@ from django.contrib.auth.hashers import check_password, make_password
 
 from .models import User
 from .models import Database,Conversation,Message,AccessList
-import requests
 import time
 
 import json
-import ast
 
 import jwt
 
 
 from datetime import datetime, timedelta
+from security import safe_requests
 
 
 
@@ -202,7 +200,7 @@ class QueryView(View):
     def answer(self, query, database_name):
         url = 'https://afcc-58-65-147-56.ngrok-free.app/'
         params = {'auth': '123', 'question': query, 'database': database_name }
-        response = requests.get(url, params=params)
+        response = safe_requests.get(url, params=params)
         if response.status_code == 200:
             rem_len = response.json()['remaining']
             answer = response.json()['answer']        
@@ -242,7 +240,7 @@ class GenerateMoreData(View):
         
         params = {'auth': '123', 'database': database_name}
         
-        response = requests.get(url, params=params)
+        response = safe_requests.get(url, params=params)
 
         
         if response.status_code == 200:
