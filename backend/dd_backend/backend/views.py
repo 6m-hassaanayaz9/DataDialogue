@@ -58,8 +58,6 @@ class AccessPrivateDatabase(View):
         access_entry = AccessList(user=user, database=database_objects)
         access_entry.save()
         return JsonResponse({'name': database_objects.database_name})
-        
-
 
 
      
@@ -407,7 +405,7 @@ class LoginView(View):
 
 
             user = User.objects.get(user_id=user_id)
-            user.access_token = {"token": access_token, "expiry": (datetime.utcnow() + timedelta(minutes=15)).isoformat()}
+            user.access_token = {"token": access_token, "expiry": (datetime.utcnow() + timedelta(days=1)).isoformat()}
             user.save()
 
 
