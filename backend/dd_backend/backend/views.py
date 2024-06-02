@@ -142,13 +142,14 @@ class LoadPreviousView(View):
         print(conversation)
         messages = Message.objects.filter(conversation=conversation)
         
+        
 
         message_data = []
         for message in messages:
             try:
                 tableData=message.tableData['tableData']
             except:
-                pass
+                tableData = ''
             
             message_data.append({
                 'question': message.question,
@@ -185,9 +186,10 @@ class QueryView(View):
         print("Received ", query)
         database_name= data.get('database')
         print("Database name received:", database_name)
+        user_id= data.get('user_id')
         time.sleep(2)
         print("Query received:", query)
-        reply = self.answer(query, database_name)
+        reply = self.answer(query, database_name, user_id)
         print ("Replyyyyy:", reply)
         if(reply['is_tabular']):
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"]})
@@ -197,9 +199,9 @@ class QueryView(View):
         else:
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
     
-    def answer(self, query, database_name):
-        url = 'https://afcc-58-65-147-56.ngrok-free.app/'
-        params = {'auth': '123', 'question': query, 'database': database_name }
+    def answer(self, query, database_name, user_id):
+        url = 'https://4180-58-65-147-56.ngrok-free.app/'
+        params = {'auth': '123', 'question': query, 'database': database_name, 'user_id': user_id }
         response = requests.get(url, params=params)
         if response.status_code == 200:
             rem_len = response.json()['remaining']
@@ -234,11 +236,12 @@ class GenerateMoreData(View):
         data = request.POST
         database_name = data.get('database_name')
         print("Database ", database_name)
+        user_id= data.get('user_id')
         time.sleep(2)
         
-        url = 'https://afcc-58-65-147-56.ngrok-free.app/generate-more'
+        url = 'https://4180-58-65-147-56.ngrok-free.app/generate-more'
         
-        params = {'auth': '123', 'database': database_name}
+        params = {'auth': '123', 'database': database_name, 'user_id': user_id}
         
         response = requests.get(url, params=params)
 
