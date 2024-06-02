@@ -278,26 +278,13 @@ class LoginView(View):
 
         password = data.get('password')
 
-        print("Data received:", data)  # Check if data is received correctly
-
-        email = data.get('email')
-        print("Email extracted:", email)  # Check the extracted email
-
-        print("Password extracted:", password)  # Check the extracted password
-        
-
+       
         try:
-
             # Check if user exists in the database
-
             print ("In try:", email)
-
             user = User.objects.get(email=email)
-
             print("User details:", user)  # Print user details
-
             print("User password from table", user.password)  # Print user password from table
-
             # Check if password is correct
 
             if not check_password(password, user.password):
@@ -331,7 +318,19 @@ class LoginView(View):
         print("User name that has been sent is:", user.username)
         print("Access token that has been sent is:", tokens["access_token"])
         print("Refresh token that has been sent is:", tokens["refresh_token"])
+        ##-----------------------------------------------------------------------
         
+        url = 'https://4180-58-65-147-56.ngrok-free.app/login'
+        
+        params = {'auth': '123', 'user_id': user.user_id, }
+        response = requests.post(url, params=params)
+        
+        if not response.json()['status'] :
+            print("Error in fetching data during llm Login")
+            return JsonResponse({"status": 400, "message": "Error in fetching data during llm Login"}, status=400)
+        
+        
+        ##-----------------------------------------------------------------------
         # Return response
         return JsonResponse({
 
@@ -339,7 +338,7 @@ class LoginView(View):
             "message": "User logged in",
             "data": {
 
-                "username": user.username, # Assuming there's a 'name' field in your Admin model
+                "username": user.username, 
                 "user_id": user.user_id,
                 "access_token": tokens["access_token"],
                 "refresh_token": tokens["refresh_token"],
@@ -504,11 +503,20 @@ class LogoutView(View):
             user.refresh_token = ""
             user.save()
             print("User logged out")
+            #------------------------------------
+            url = 'https://4180-58-65-147-56.ngrok-free.app/logout'
+        
+            params = {'auth': '123', 'user_id': user.user_id, }
+            response = requests.post(url, params=params)
+            if not response.json()['status'] :
+                print("Error in fetching data during llm Logout")
+                return JsonResponse({"status": 400, "message": "Error in fetching data during llm Logout"}, status=400)
+            #------------------------------------
             return JsonResponse({"status": 200, "message": "User logged out successfully"}, status=200)
 
         except User.DoesNotExist:
             print("User not found")
-        return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+            return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
         
         
