@@ -58,8 +58,6 @@ class AccessPrivateDatabase(View):
         access_entry = AccessList(user=user, database=database_objects)
         access_entry.save()
         return JsonResponse({'name': database_objects.database_name})
-        
-
 
 
      
@@ -144,13 +142,14 @@ class LoadPreviousView(View):
         print(conversation)
         messages = Message.objects.filter(conversation=conversation)
         
+        
 
         message_data = []
         for message in messages:
             try:
                 tableData=message.tableData['tableData']
             except:
-                pass
+                tableData = ''
             
             message_data.append({
                 'question': message.question,
@@ -187,9 +186,10 @@ class QueryView(View):
         print("Received ", query)
         database_name= data.get('database')
         print("Database name received:", database_name)
+        user_id= data.get('user_id')
         time.sleep(2)
         print("Query received:", query)
-        reply = self.answer(query, database_name)
+        reply = self.answer(query, database_name, user_id)
         print ("Replyyyyy:", reply)
         if(reply['is_tabular']):
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"]})
@@ -199,9 +199,9 @@ class QueryView(View):
         else:
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
     
-    def answer(self, query, database_name):
-        url = 'https://afcc-58-65-147-56.ngrok-free.app/'
-        params = {'auth': '123', 'question': query, 'database': database_name }
+    def answer(self, query, database_name, user_id):
+        url = 'https://4180-58-65-147-56.ngrok-free.app/'
+        params = {'auth': '123', 'question': query, 'database': database_name, 'user_id': user_id }
         response = requests.get(url, params=params)
         if response.status_code == 200:
             rem_len = response.json()['remaining']
@@ -236,11 +236,12 @@ class GenerateMoreData(View):
         data = request.POST
         database_name = data.get('database_name')
         print("Database ", database_name)
+        user_id= data.get('user_id')
         time.sleep(2)
         
-        url = 'https://afcc-58-65-147-56.ngrok-free.app/generate-more'
+        url = 'https://4180-58-65-147-56.ngrok-free.app/generate-more'
         
-        params = {'auth': '123', 'database': database_name}
+        params = {'auth': '123', 'database': database_name, 'user_id': user_id}
         
         response = requests.get(url, params=params)
 
@@ -277,26 +278,13 @@ class LoginView(View):
 
         password = data.get('password')
 
-        print("Data received:", data)  # Check if data is received correctly
-
-        email = data.get('email')
-        print("Email extracted:", email)  # Check the extracted email
-
-        print("Password extracted:", password)  # Check the extracted password
-        
-
+       
         try:
-
             # Check if user exists in the database
-
             print ("In try:", email)
-
             user = User.objects.get(email=email)
-
             print("User details:", user)  # Print user details
-
             print("User password from table", user.password)  # Print user password from table
-
             # Check if password is correct
 
             if not check_password(password, user.password):
@@ -330,7 +318,19 @@ class LoginView(View):
         print("User name that has been sent is:", user.username)
         print("Access token that has been sent is:", tokens["access_token"])
         print("Refresh token that has been sent is:", tokens["refresh_token"])
+        ##-----------------------------------------------------------------------
         
+        url = 'https://4180-58-65-147-56.ngrok-free.app/login'
+        
+        params = {'auth': '123', 'user_id': user.user_id, }
+        response = requests.post(url, params=params)
+        
+        if not response.json()['status'] :
+            print("Error in fetching data during llm Login")
+            return JsonResponse({"status": 400, "message": "Error in fetching data during llm Login"}, status=400)
+        
+        
+        ##-----------------------------------------------------------------------
         # Return response
         return JsonResponse({
 
@@ -338,7 +338,7 @@ class LoginView(View):
             "message": "User logged in",
             "data": {
 
-                "username": user.username, # Assuming there's a 'name' field in your Admin model
+                "username": user.username, 
                 "user_id": user.user_id,
                 "access_token": tokens["access_token"],
                 "refresh_token": tokens["refresh_token"],
@@ -407,7 +407,7 @@ class LoginView(View):
 
 
             user = User.objects.get(user_id=user_id)
-            user.access_token = {"token": access_token, "expiry": (datetime.utcnow() + timedelta(minutes=15)).isoformat()}
+            user.access_token = {"token": access_token, "expiry": (datetime.utcnow() + timedelta(days=1)).isoformat()}
             user.save()
 
 
@@ -503,11 +503,20 @@ class LogoutView(View):
             user.refresh_token = ""
             user.save()
             print("User logged out")
+            #------------------------------------
+            url = 'https://4180-58-65-147-56.ngrok-free.app/logout'
+        
+            params = {'auth': '123', 'user_id': user.user_id, }
+            response = requests.post(url, params=params)
+            if not response.json()['status'] :
+                print("Error in fetching data during llm Logout")
+                return JsonResponse({"status": 400, "message": "Error in fetching data during llm Logout"}, status=400)
+            #------------------------------------
             return JsonResponse({"status": 200, "message": "User logged out successfully"}, status=200)
 
         except User.DoesNotExist:
             print("User not found")
-        return JsonResponse({"status": 400, "message": "User not found"}, status=400)
+            return JsonResponse({"status": 400, "message": "User not found"}, status=400)
         
                         
 
