@@ -34,7 +34,7 @@ import jwt
 
 from datetime import datetime, timedelta
 
-
+BASE_URL = "https://4180-58-65-147-56.ngrok-free.app/"
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AccessPrivateDatabase(View):
@@ -200,7 +200,7 @@ class QueryView(View):
             return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
     
     def answer(self, query, database_name, user_id):
-        url = 'https://4180-58-65-147-56.ngrok-free.app/'
+        url = BASE_URL
         params = {'auth': '123', 'question': query, 'database': database_name, 'user_id': user_id }
         response = requests.get(url, params=params)
         if response.status_code == 200:
@@ -239,7 +239,7 @@ class GenerateMoreData(View):
         user_id= data.get('user_id')
         time.sleep(2)
         
-        url = 'https://4180-58-65-147-56.ngrok-free.app/generate-more'
+        url = f'{BASE_URL}/generate-more'
         
         params = {'auth': '123', 'database': database_name, 'user_id': user_id}
         
@@ -320,7 +320,7 @@ class LoginView(View):
         print("Refresh token that has been sent is:", tokens["refresh_token"])
         ##-----------------------------------------------------------------------
         
-        url = 'https://4180-58-65-147-56.ngrok-free.app/login'
+        url = f'{BASE_URL}/login'
         
         params = {'auth': '123', 'user_id': user.user_id, }
         response = requests.post(url, params=params)
@@ -504,7 +504,7 @@ class LogoutView(View):
             user.save()
             print("User logged out")
             #------------------------------------
-            url = 'https://4180-58-65-147-56.ngrok-free.app/logout'
+            url = f'{BASE_URL}/logout'
         
             params = {'auth': '123', 'user_id': user.user_id, }
             response = requests.post(url, params=params)
