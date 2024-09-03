@@ -1,4 +1,4 @@
-import requests
+from security import safe_requests
  
 URL = "http://127.0.0.1:12345/"
 # question = "Which business has the best inspection score?"
@@ -17,7 +17,7 @@ for question in questions:
     PARAMS = {'auth':123,'question':question,'database':"SF"}
     
 
-    r = requests.get(url = URL, params = PARAMS,timeout=3600,verify = False)
+    r = safe_requests.get(url = URL, params = PARAMS,timeout=3600,verify = False)
     print(r.json())
     data = r.json()
     print(data)

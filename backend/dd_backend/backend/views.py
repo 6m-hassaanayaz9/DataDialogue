@@ -33,6 +33,7 @@ import jwt
 
 
 from datetime import datetime, timedelta
+from security import safe_requests
 
 BASE_URL = "https://4180-58-65-147-56.ngrok-free.app/"
 
@@ -202,7 +203,7 @@ class QueryView(View):
     def answer(self, query, database_name, user_id):
         url = BASE_URL
         params = {'auth': '123', 'question': query, 'database': database_name, 'user_id': user_id }
-        response = requests.get(url, params=params)
+        response = safe_requests.get(url, params=params)
         if response.status_code == 200:
             rem_len = response.json()['remaining']
             answer = response.json()['answer']        
@@ -243,7 +244,7 @@ class GenerateMoreData(View):
         
         params = {'auth': '123', 'database': database_name, 'user_id': user_id}
         
-        response = requests.get(url, params=params)
+        response = safe_requests.get(url, params=params)
 
         
         if response.status_code == 200:
