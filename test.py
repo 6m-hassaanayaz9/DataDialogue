@@ -17,7 +17,7 @@ for question in questions:
     PARAMS = {'auth':123,'question':question,'database':"SF"}
     
 
-    r = requests.get(url = URL, params = PARAMS,timeout=3600,verify = False)
+    r = requests.get(url = URL, params = PARAMS,timeout=3600,verify = True)
     print(r.json())
     data = r.json()
     print(data)
