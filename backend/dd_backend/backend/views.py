@@ -19,6 +19,9 @@ from django.views import View
 
 from django.contrib.auth.hashers import check_password, make_password
 
+import base64
+
+
 
 
 from .models import User
@@ -34,7 +37,7 @@ import jwt
 
 from datetime import datetime, timedelta
 
-BASE_URL = "https://4180-58-65-147-56.ngrok-free.app/"
+BASE_URL = "http://localhost:12345"
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AccessPrivateDatabase(View):
@@ -208,6 +211,17 @@ class QueryView(View):
             answer = response.json()['answer']        
             headers = response.json()['headers']
             is_tabular = response.json()['is_tabular']
+            is_image = response.json()['is_image']
+            
+            if is_image:
+                image_path = response.json()['image_path']
+                
+                
+                image_content = requests.get(url+"/get-image",params = {'auth': '123','image_path':image_path})
+                
+                image = base64.b64encode(image_content).decode('utf-8')
+            else:
+                image = None
 
             if isinstance(answer, str):
                 answer_list = answer.split('\n')
@@ -215,7 +229,9 @@ class QueryView(View):
                     "answer": answer_list,
                     "remaining": rem_len,
                     "is_tabular": is_tabular,
-                    "headers": headers
+                    "headers": headers,
+                    "is_image": is_image,
+                    "image": image
                 }
                 return reply
 
@@ -223,7 +239,9 @@ class QueryView(View):
                 "answer": answer,
                 "remaining": rem_len,
                 "is_tabular": is_tabular,
-                "headers": headers
+                "headers": headers,
+                "is_image": is_image,
+                "image": image
             }
             return reply
         else:
