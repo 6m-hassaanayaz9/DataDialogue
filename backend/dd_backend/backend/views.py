@@ -195,12 +195,11 @@ class QueryView(View):
         reply = self.answer(query, database_name, user_id)
         print ("Replyyyyy:", reply)
         if(reply['is_tabular']):
-            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"]})
-        
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"], 'is_image': reply["is_image"], 'image': reply["image"]})
             print ("Answerrrrrr:", reply['answer'])
             print ("Remainingggggg:", reply['remaining'])
         else:
-            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"], 'is_image': reply["is_image"], 'image': reply["image"]})    
     
     def answer(self, query, database_name, user_id):
         url = BASE_URL
