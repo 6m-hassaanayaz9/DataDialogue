@@ -195,11 +195,12 @@ class QueryView(View):
         reply = self.answer(query, database_name, user_id)
         print ("Replyyyyy:", reply)
         if(reply['is_tabular']):
-            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"], 'is_image': reply["is_image"], 'image': reply["image"]})
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'headers': reply['headers'], 'is_tabular': reply["is_tabular"]})
+        
             print ("Answerrrrrr:", reply['answer'])
             print ("Remainingggggg:", reply['remaining'])
         else:
-            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"], 'is_image': reply["is_image"], 'image': reply["image"]})    
+            return JsonResponse({'status': 200, 'message': reply['answer'], 'remaining': reply['remaining'], 'is_tabular': reply["is_tabular"]})
     
     def answer(self, query, database_name, user_id):
         url = BASE_URL
@@ -218,7 +219,7 @@ class QueryView(View):
                 
                 image_content = requests.get(url+"/get-image",params = {'auth': '123','image_path':image_path})
                 
-                image = base64.b64encode(image_content).decode('utf-8')
+                image = base64.b64encode(image_content.content).decode('utf-8')
             else:
                 image = None
 
