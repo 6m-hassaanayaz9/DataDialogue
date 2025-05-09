@@ -205,7 +205,7 @@ class QueryView(View):
     def answer(self, query, database_name, user_id):
         url = BASE_URL
         params = {'auth': '123', 'question': query, 'database': database_name, 'user_id': user_id }
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=60)
         if response.status_code == 200:
             rem_len = response.json()['remaining']
             answer = response.json()['answer']        
@@ -217,7 +217,7 @@ class QueryView(View):
                 image_path = response.json()['image_path']
                 
                 
-                image_content = requests.get(url+"/get-image",params = {'auth': '123','image_path':image_path})
+                image_content = requests.get(url+"/get-image",params = {'auth': '123','image_path':image_path}, timeout=60)
                 
                 image = base64.b64encode(image_content.content).decode('utf-8')
             else:
@@ -261,7 +261,7 @@ class GenerateMoreData(View):
         
         params = {'auth': '123', 'database': database_name, 'user_id': user_id}
         
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=60)
 
         
         if response.status_code == 200:
@@ -341,7 +341,7 @@ class LoginView(View):
         url = f'{BASE_URL}/login'
         
         params = {'auth': '123', 'user_id': user.user_id, }
-        response = requests.post(url, params=params)
+        response = requests.post(url, params=params, timeout=60)
         
         if not response.json()['status'] :
             print("Error in fetching data during llm Login")
@@ -525,7 +525,7 @@ class LogoutView(View):
             url = f'{BASE_URL}/logout'
         
             params = {'auth': '123', 'user_id': user.user_id, }
-            response = requests.post(url, params=params)
+            response = requests.post(url, params=params, timeout=60)
             if not response.json()['status'] :
                 print("Error in fetching data during llm Logout")
                 return JsonResponse({"status": 400, "message": "Error in fetching data during llm Logout"}, status=400)
