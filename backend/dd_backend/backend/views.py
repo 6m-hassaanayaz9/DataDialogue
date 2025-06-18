@@ -36,6 +36,7 @@ import jwt
 
 
 from datetime import datetime, timedelta
+from security import safe_requests
 
 BASE_URL = "http://localhost:12345"
 
@@ -205,7 +206,7 @@ class QueryView(View):
     def answer(self, query, database_name, user_id):
         url = BASE_URL
         params = {'auth': '123', 'question': query, 'database': database_name, 'user_id': user_id }
-        response = requests.get(url, params=params)
+        response = safe_requests.get(url, params=params)
         if response.status_code == 200:
             rem_len = response.json()['remaining']
             answer = response.json()['answer']        
@@ -217,7 +218,7 @@ class QueryView(View):
                 image_path = response.json()['image_path']
                 
                 
-                image_content = requests.get(url+"/get-image",params = {'auth': '123','image_path':image_path})
+                image_content = safe_requests.get(url+"/get-image",params = {'auth': '123','image_path':image_path})
                 
                 image = base64.b64encode(image_content.content).decode('utf-8')
             else:
@@ -261,7 +262,7 @@ class GenerateMoreData(View):
         
         params = {'auth': '123', 'database': database_name, 'user_id': user_id}
         
-        response = requests.get(url, params=params)
+        response = safe_requests.get(url, params=params)
 
         
         if response.status_code == 200:
